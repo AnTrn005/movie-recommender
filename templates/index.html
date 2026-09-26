@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Movie Recommender</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+    <link
+    rel="icon"
+    href="{{ url_for('static', filename='images_folder/logo.ico') }}"
+    type="image/ico"
+    >
+
+</head>
+
+
+<body>
+
+
+<!-- =========================================
+     HEADER
+========================================= -->
+
+<header>
+    <img src="{{ url_for('static', filename='images_folder/logo_letters_white.png') }}" alt="Logo">
+    <h1>Movie Recommender</h1>
+
+    <p>
+        Describe what you want to watch.
+    </p>
+
+</header>
+
+
+
+<!-- =========================================
+     SEARCH
+========================================= -->
+
+<main>
+
+    <section class="search-section">
+
+        <textarea
+            id="prompt"
+            placeholder="Example: I want a science fiction movie about space exploration and survival."
+        ></textarea>
+
+        <button id="recommendButton">
+            Recommend Movies
+        </button>
+
+        <p id="message"></p>
+
+    </section>
+
+
+
+    <!-- =====================================
+         RESULTS
+    ====================================== -->
+
+    <section>
+
+        <h2 id="resultsTitle">
+            Recommendations
+        </h2>
+
+        <div
+            id="results"
+            class="movie-grid"
+        ></div>
+
+    </section>
+
+</main>
+
+
+
+<!-- =========================================
+     MOVIE DETAILS MODAL
+========================================= -->
+
+<div
+    id="movieModal"
+    class="movie-modal"
+>
+
+    <div class="movie-details">
+
+
+        <!-- Close -->
+
+        <button
+            id="closeModal"
+            class="close-button"
+        >
+            ×
+        </button>
+
+
+
+        <!-- Main movie information -->
+
+        <div class="detail-main">
+
+
+            <img
+                id="detailPoster"
+                class="detail-poster"
+                alt="Movie poster"
+            >
+
+
+            <div class="detail-information">
+
+
+                <h1 id="detailTitle"></h1>
+
+
+                <p
+                    id="detailTagline"
+                    class="tagline"
+                ></p>
+
+
+                <div class="movie-meta">
+
+                    <span id="detailRating"></span>
+
+                    <span id="detailDate"></span>
+
+                    <span id="detailRuntime"></span>
+
+                </div>
+
+
+                <p
+                    id="detailGenres"
+                    class="genres"
+                ></p>
+
+
+                <h3>Overview</h3>
+
+                <p id="detailOverview"></p>
+
+
+            </div>
+
+        </div>
+
+
+
+        <!-- Actors -->
+
+        <h2 class="cast-title">
+            Cast
+        </h2>
+
+
+        <div
+            id="detailActors"
+            class="actors"
+        ></div>
+
+
+    </div>
+
+</div>
+
+
+
+<!-- =========================================
+     JAVASCRIPT
+========================================= -->
+
+<script>
+
+
+// -----------------------------------------
+// Elements
+// -----------------------------------------
+
+const promptInput =
+    document.getElementById("prompt");
+
+const recommendButton =
+    document.getElementById("recommendButton");
+
+const resultsContainer =
+    document.getElementById("results");
+
+const message =
+    document.getElementById("message");
+
+const movieModal =
+    document.getElementById("movieModal");
+
+const closeModal =
+    document.getElementById("closeModal");
+
+
+
+// -----------------------------------------
+// Recommendation button
+// -----------------------------------------
+
+recommendButton.addEventListener(
+    "click",
+    getRecommendations
+);
+
+
+
+// Allow Command/Ctrl + Enter
+promptInput.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (
+            event.key === "Enter" &&
+            (event.metaKey || event.ctrlKey)
+        ) {
+
+            getRecommendations();
+
+        }
+
+    }
+);
+
+
+
+// -----------------------------------------
+// Get recommendations
+// -----------------------------------------
+
+async function getRecommendations() {
+
+    const prompt =
+        promptInput.value.trim();
+
+
+    if (!prompt) {
+
+        message.textContent =
+            "Please describe what you want to watch.";
+
+        return;
+
+    }
+
+
+    message.textContent =
+        "Finding movies...";
+
+
+    recommendButton.disabled = true;
+
+    resultsContainer.innerHTML = "";
+
+
+    try {
+
+        const response = await fetch(
+            "/recommend",
+            {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify({
+                    prompt: prompt
+                })
+
+            }
+        );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.error ||
+                "Could not get recommendations."
+            );
+
+        }
+
+
+        displayMovies(data);
+
+
+        message.textContent =
+            `Found ${data.length} recommendations.`;
+
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        message.textContent =
+            error.message;
+
+    }
+
+    finally {
+
+        recommendButton.disabled =
+            false;
+
+    }
+
+}
+
+
+
+// -----------------------------------------
+// Display movies
+// -----------------------------------------
+
+function displayMovies(movies) {
+
+    resultsContainer.innerHTML = "";
+
+
+    movies.forEach(function(movie) {
+
+
+        const card =
+            document.createElement("article");
+
+
+        card.className =
+            "movie-card";
+
+
+
+        // Poster
+
+        const poster =
+            document.createElement("img");
+
+
+        poster.className =
+            "movie-poster";
+
+
+        poster.src =
+            movie.poster ||
+            "https://via.placeholder.com/300x450?text=No+Poster";
+
+
+        poster.alt =
+            movie.title;
+
+
+
+        // Information
+
+        const info =
+            document.createElement("div");
+
+
+        info.className =
+            "movie-card-info";
+
+
+
+        const title =
+            document.createElement("h3");
+
+
+        title.textContent =
+            movie.title;
+
+
+
+        const release =
+            document.createElement("p");
+
+
+        release.className =
+            "release-date";
+
+
+        release.textContent =
+            movie.release
+            ? movie.release.substring(0, 4)
+            : "Unknown year";
+
+
+
+        const description =
+            document.createElement("p");
+
+
+        description.className =
+            "movie-description";
+
+
+        description.textContent =
+            movie.plot;
+
+
+
+        const button =
+            document.createElement("button");
+
+
+        button.className =
+            "details-button";
+
+
+        button.textContent =
+            "View Details";
+
+
+
+        button.addEventListener(
+            "click",
+            function() {
+
+                showMovieDetails(
+                    movie.id
+                );
+
+            }
+        );
+
+
+
+        info.appendChild(title);
+
+        info.appendChild(release);
+
+        info.appendChild(description);
+
+        info.appendChild(button);
+
+
+        card.appendChild(poster);
+
+        card.appendChild(info);
+
+
+        resultsContainer.appendChild(card);
+
+    });
+
+}
+
+
+
+// -----------------------------------------
+// Movie details
+// -----------------------------------------
+
+async function showMovieDetails(movieId) {
+
+
+    if (!movieId) {
+
+        return;
+
+    }
+
+
+    try {
+
+
+        const response =
+            await fetch(
+                `/movie/${movieId}`
+            );
+
+
+        const movie =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                movie.error ||
+                "Could not load movie."
+            );
+
+        }
+
+
+
+        // Poster
+
+        const detailPoster =
+            document.getElementById(
+                "detailPoster"
+            );
+
+
+        if (movie.poster) {
+
+            detailPoster.src =
+                movie.poster;
+
+            detailPoster.style.display =
+                "block";
+
+        }
+
+        else {
+
+            detailPoster.style.display =
+                "none";
+
+        }
+
+
+
+        // Title
+
+        document.getElementById(
+            "detailTitle"
+        ).textContent =
+            movie.title;
+
+
+
+        // Tagline
+
+        document.getElementById(
+            "detailTagline"
+        ).textContent =
+            movie.tagline || "";
+
+
+
+        // Rating
+
+        const rating =
+            Number(movie.rating || 0);
+
+
+        document.getElementById(
+            "detailRating"
+        ).textContent =
+            `⭐ ${rating.toFixed(1)} / 10`;
+
+
+
+        // Release date
+
+        document.getElementById(
+            "detailDate"
+        ).textContent =
+            movie.release_date ||
+            "Unknown date";
+
+
+
+        // Runtime
+
+        document.getElementById(
+            "detailRuntime"
+        ).textContent =
+            movie.runtime
+            ? `${movie.runtime} min`
+            : "";
+
+
+
+        // Genres
+
+        document.getElementById(
+            "detailGenres"
+        ).textContent =
+            movie.genres.join(" • ");
+
+
+
+        // Overview
+
+        document.getElementById(
+            "detailOverview"
+        ).textContent =
+            movie.overview ||
+            "No overview available.";
+
+
+
+        // ---------------------------------
+        // Actors
+        // ---------------------------------
+
+        const actorsContainer =
+            document.getElementById(
+                "detailActors"
+            );
+
+
+        actorsContainer.innerHTML = "";
+
+
+        movie.actors.forEach(
+            function(actor) {
+
+
+                const actorCard =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                actorCard.className =
+                    "actor-card";
+
+
+
+                if (actor.profile) {
+
+
+                    const actorImage =
+                        document.createElement(
+                            "img"
+                        );
+
+
+                    actorImage.src =
+                        actor.profile;
+
+
+                    actorImage.alt =
+                        actor.name;
+
+
+                    actorCard.appendChild(
+                        actorImage
+                    );
+
+                }
+
+
+
+                const actorName =
+                    document.createElement(
+                        "strong"
+                    );
+
+
+                actorName.textContent =
+                    actor.name;
+
+
+
+                const character =
+                    document.createElement(
+                        "span"
+                    );
+
+
+                character.textContent =
+                    actor.character
+                    ? `as ${actor.character}`
+                    : "";
+
+
+
+                actorCard.appendChild(
+                    actorName
+                );
+
+
+                actorCard.appendChild(
+                    character
+                );
+
+
+                actorsContainer.appendChild(
+                    actorCard
+                );
+
+
+            }
+        );
+
+
+
+        // Show modal
+
+        movieModal.classList.add(
+            "show"
+        );
+
+
+        document.body.classList.add(
+            "modal-open"
+        );
+
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        message.textContent =
+            error.message;
+
+    }
+
+}
+
+
+
+// -----------------------------------------
+// Close modal
+// -----------------------------------------
+
+function closeMovieModal() {
+
+    movieModal.classList.remove(
+        "show"
+    );
+
+    document.body.classList.remove(
+        "modal-open"
+    );
+
+}
+
+
+
+closeModal.addEventListener(
+    "click",
+    closeMovieModal
+);
+
+
+
+// Click outside modal
+
+movieModal.addEventListener(
+    "click",
+    function(event) {
+
+        if (
+            event.target === movieModal
+        ) {
+
+            closeMovieModal();
+
+        }
+
+    }
+);
+
+
+
+// Escape key
+
+document.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (
+            event.key === "Escape" &&
+            movieModal.classList.contains(
+                "show"
+            )
+        ) {
+
+            closeMovieModal();
+
+        }
+
+    }
+);
+
+
+</script>
+
+
+</body>
+
+</html>
