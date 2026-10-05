@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Movie Recommender | Interactive Demo</title>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <header>
+        <div class="demo-badge">INTERACTIVE DEMO</div>
+
+        <h1>Movie Recommender</h1>
+
+        <p class="subtitle">
+            Describe what you want to watch.
+        </p>
+
+        <p class="demo-description">
+            This browser demo uses a lightweight recommendation system.
+            The full project uses sentence embeddings and cosine similarity.
+        </p>
+    </header>
+
+
+    <main>
+
+        <!-- SEARCH -->
+        <section class="search-section">
+
+            <textarea
+                id="prompt"
+                placeholder="Example: I want a science fiction movie about space exploration and survival."
+            ></textarea>
+
+            <div class="examples">
+
+                <button
+                    class="example-button"
+                    data-prompt="A science fiction movie about space exploration and survival"
+                >
+                    Space Adventure
+                </button>
+
+                <button
+                    class="example-button"
+                    data-prompt="A funny animated movie about animals and friendship"
+                >
+                    Animation
+                </button>
+
+                <button
+                    class="example-button"
+                    data-prompt="A dark crime thriller about detectives, criminals, and murder"
+                >
+                    Crime Thriller
+                </button>
+
+                <button
+                    class="example-button"
+                    data-prompt="A romantic movie about young people falling in love"
+                >
+                    Romance
+                </button>
+
+            </div>
+
+
+            <button id="recommendButton">
+                Recommend Movies
+            </button>
+
+            <p id="message"></p>
+
+        </section>
+
+
+        <!-- RESULTS -->
+        <section class="results-section">
+
+            <div class="results-heading">
+
+                <h2 id="resultsTitle">
+                    Recommendations
+                </h2>
+
+                <span id="resultCount"></span>
+
+            </div>
+
+            <div
+                id="results"
+                class="movie-grid"
+            ></div>
+
+        </section>
+
+    </main>
+
+
+    <!-- MOVIE DETAILS MODAL -->
+    <div
+        id="movieModal"
+        class="movie-modal"
+    >
+
+        <div class="movie-details">
+
+            <button
+                id="closeModal"
+                class="close-button"
+                aria-label="Close movie details"
+            >
+                ×
+            </button>
+
+
+            <div class="detail-main">
+
+                <img
+                    id="detailPoster"
+                    class="detail-poster"
+                    alt="Movie poster"
+                >
+
+
+                <div class="detail-information">
+
+                    <h1 id="detailTitle"></h1>
+
+                    <div class="movie-meta">
+
+                        <span id="detailDate"></span>
+
+                        <span id="detailPopularity"></span>
+
+                    </div>
+
+                    <h3>Overview</h3>
+
+                    <p id="detailOverview"></p>
+
+                    <p
+                        id="detailSimilarity"
+                        class="similarity-detail"
+                    ></p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <footer>
+
+        <p>
+            Portfolio demo — the full project uses
+            SentenceTransformer embeddings and cosine similarity.
+        </p>
+
+    </footer>
+
+
+    <script src="demo.js"></script>
+
+</body>
+
+</html>
